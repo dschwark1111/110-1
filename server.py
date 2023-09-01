@@ -2,9 +2,10 @@ from flask import Flask, request, abort
 from config import me, db
 import json
 from bson import ObjectId
-
+from flask_cors import CORS
 #creates server
 app = Flask("server")
+CORS(app) #warning this line will disable cors
 
 @app.get("/")
 def home():
@@ -82,6 +83,15 @@ def get_product_id(id):
     
     return json.dumps(product)
 
+@app.delete("/api/products/id/<id>")
+def delete_product(id):
+    if not ObjectId.is_valid(id):
+        return abort(400, "Invalid ID")
+    db_id = ObjectId (id)
+    db.products.delete_one ({"_id": id})
+    
+    return json.dumps({"status": "OK"})
+
 @app.get("/api/reports/total")
 def total_value():
     total = 0
@@ -112,8 +122,7 @@ def save_coupon():
     if not "discount" in coupon:
         return about (400, "discount is required")
     #discount can't be bigger than 35
-    if not "discount" in coupon:
-        return about (400, "discount is required")
+
 
     db.coupons.insert_one(coupon)
     return json.dumps(fix_id(coupon))
